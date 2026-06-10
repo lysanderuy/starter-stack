@@ -1,20 +1,28 @@
-import { drizzle } from "drizzle-orm/postgres-js";
+import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 
 import { env } from "@/lib/env";
 
 import * as schema from "./schema";
 
-// Cache the connection across hot reloads in development to avoid
-// exhausting the Supabase connection pool.
-const globalForDb = globalThis as unknown as { pgClient?: ReturnType<typeof postgres> };
+type Db = PostgresJsDatabase<typeof schema>;
 
-// prepare: false is required when connecting through the Supabase
-// transaction pooler (port 6543), which does not support prepared statements.
-const client = globalForDb.pgClient ?? postgres(env.DATABASE_URL, { prepare: false });
+// Lazy init: importing this module (e.g. during `next build` page-data
+// collection) must not require DATABASE_URL. The instance is cached on
+// globalThis so dev hot reloads don't exhaust the Supabase connection pool.
+const globalForDb = globalThis as unknown as { db?: Db };
 
-if (process.env.NODE_ENV !== "production") {
-  globalForDb.pgClient = client;
+function createDb(): Db {
+  // prepare: false is required when connecting through the Supabase
+  // transaction pooler (port 6543), which does not support prepared statements.
+  const client = postgres(env.DATABASE_URL, { prepare: false });
+  return drizzle(client, { schema });
 }
 
-export const db = drizzle(client, { schema });
+export const db: Db = new Proxy({} as Db, {
+  get(_target, prop) {
+    const instance = (globalForDb.db ??= createDb());
+    const value = instance[prop as keyof Db];
+    return typeof value === "function" ? value.bind(instance) : value;
+  },
+});
