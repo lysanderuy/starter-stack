@@ -100,9 +100,30 @@ directly via the SDK (it manages its own cookies). App data still always
 goes through `/api`.
 
 A Postgres trigger (`0001_auth-trigger-and-rls.sql`) auto-creates a
-`profiles` row on signup. **Don't need profiles?** Auth works without it —
-delete `src/db/schema/profiles.ts`, both migration files, the profile
-validator/service/route/hook, and regenerate.
+`profiles` row on signup.
+
+### Starting with an empty DB (removing the profiles example)
+
+Auth does not depend on `profiles` — identity lives in `auth.users` +
+cookies. To start a project with a clean schema, delete the example slice:
+
+```
+src/db/schema/profiles.ts            # + remove its export from schema/index.ts
+src/db/migrations/0000_*.sql, 0001_*.sql, meta/   # keep the migrations dir
+src/validators/profile.validator.ts
+src/services/profile.service.ts
+src/app/api/profile/
+src/hooks/use-profile.ts
+```
+
+Then define your own tables and run `db:generate` + `db:migrate` as usual.
+Only delete migrations that were never applied (fresh Supabase project);
+if they were already applied, drop the objects first (`DROP TABLE profiles;
+DROP FUNCTION public.handle_new_user CASCADE;`) or reset the database.
+
+If you later want a user companion table again, reuse the pattern from
+`0001_auth-trigger-and-rls.sql`: FK to `auth.users(id) ON DELETE CASCADE`,
+`ENABLE ROW LEVEL SECURITY`, and an `AFTER INSERT ON auth.users` trigger.
 
 **Security model:** Drizzle connects as `postgres` and bypasses RLS, so
 authorization lives in route handlers (`getUser()` + user-scoped queries).
