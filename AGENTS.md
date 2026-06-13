@@ -13,7 +13,7 @@ page/client component → TanStack Query hook (src/hooks) → api wrapper (src/l
   → route handler (src/app/api/**) → service (src/services) → db (src/db, Drizzle)
 ```
 
-- Client components NEVER import from `src/services` or `src/db`. They reach the backend only through `src/hooks` → the `api` wrapper.
+- Client components NEVER import from `src/services` or `src/db`. They reach the backend only through `src/hooks` → the `api` wrapper. Both layers start their entry files with `import "server-only"` so an accidental client import fails the build instead of leaking server code/secrets to the browser — keep this line at the top of every `*.service.ts` and `src/db/index.ts`.
 - Route handlers stay thin: authenticate (`createClient()` from `src/lib/supabase/server` + `getUser()`), validate with Zod, delegate to a service, respond with `apiSuccess`/`apiError`/`handleApiError` from `src/lib/api/response`. All routes return the `ApiResponse<T>` envelope (`src/types/api.ts`).
 - Services own ALL business logic and DB access. They never touch `Request`/`Response`/cookies; they take plain inputs (e.g. `userId`) and must scope every query to the authenticated user.
 - Exception: auth itself calls the Supabase SDK directly from pages (it manages its own cookies). App data never does this.

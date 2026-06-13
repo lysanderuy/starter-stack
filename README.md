@@ -166,12 +166,19 @@ To start a project with a clean schema, delete the example slice:
 
 ```
 src/db/schema/profiles.ts            # + remove its export from schema/index.ts
-src/db/migrations/0000_*.sql, 0001_*.sql, meta/   # keep the migrations dir
+src/db/migrations/0000_*.sql, 0001_*.sql, 0002_*.sql, meta/   # keep the migrations dir
 src/validators/profile.validator.ts
 src/services/profile.service.ts
+src/services/email.service.ts        # welcome email depends on profiles
+src/emails/                          # the welcome-email template
 src/app/api/profile/
 src/hooks/use-profile.ts
 ```
+
+Also edit `src/app/api/auth/callback/route.ts` to drop the `sendWelcomeOnce`
+helper and its two service imports, and remove `RESEND_API_KEY` /
+`RESEND_FROM_EMAIL` from `.env.example` and `src/lib/env.ts` if you don't send
+any app email.
 
 Only delete migrations that were never applied (fresh Supabase project); if
 already applied, drop the objects first (`DROP TABLE profiles; DROP FUNCTION
