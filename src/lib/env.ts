@@ -12,6 +12,11 @@ const envSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z.url(),
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
   DATABASE_URL: z.string().min(1),
+  // Optional: the welcome-email feature needs these, but the app boots without
+  // them (email.service throws a clear error if you try to send unconfigured).
+  RESEND_API_KEY: z.string().min(1).optional(),
+  // Verified sender, e.g. "Acme <hello@mail.yourdomain.com>".
+  RESEND_FROM_EMAIL: z.string().min(1).optional(),
 });
 
 type Env = z.infer<typeof envSchema>;
@@ -24,6 +29,8 @@ export const env: Env = new Proxy({} as Env, {
       NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
       NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       DATABASE_URL: process.env.DATABASE_URL,
+      RESEND_API_KEY: process.env.RESEND_API_KEY,
+      RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL,
     });
     return cached[key as keyof Env];
   },
