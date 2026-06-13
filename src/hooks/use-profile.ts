@@ -27,8 +27,8 @@ export function useUpdateProfile() {
 
   return useMutation({
     mutationFn: (input: UpdateProfileInput) => api.patch<Profile>("/api/profile", input),
-    onSuccess: (profile) => {
-      queryClient.setQueryData(profileKeys.me, profile);
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: profileKeys.me });
     },
   });
 }
