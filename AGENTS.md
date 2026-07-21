@@ -48,17 +48,16 @@ page/client component → TanStack Query hook (src/hooks) → api wrapper (src/l
 
 Vitest, unit-only, node environment (no jsdom yet). Only pure logic is
 covered — validators (`src/validators`) and framework-free `src/lib`
-helpers. Services and routes touch Drizzle/Supabase and are intentionally
-untested for now: this project has no dedicated test database, and mocking
-the Drizzle client would give false confidence rather than real coverage.
-Don't add jsdom, Testing Library, or DB mocking to "fix" this without
-checking with the user first — it's a deliberate scope boundary, not a gap.
+helpers. Services and routes touch Drizzle/Supabase and are untested: this
+project has no dedicated test database, and mocking the Drizzle client
+would give false confidence rather than real coverage. Check with the user
+before adding jsdom, Testing Library, or DB mocking.
 
 ## CI and pre-commit
 
-`.husky/pre-commit` runs `lint-staged` (ESLint + Prettier on staged files) then `npm run typecheck` — deliberately **not** `npm test`, to keep commits fast. Tests run in `.github/workflows/ci.yml` instead, alongside typecheck/lint, on every PR and push to `main`. Don't "fix" the pre-commit hook by re-adding `npm test` — that was a deliberate choice, not an oversight.
+`.husky/pre-commit` runs `lint-staged` (ESLint + Prettier on staged files) and `npm run typecheck` only — no `npm test`, to keep commits fast. Tests run in `.github/workflows/ci.yml` on every PR and push to `main`.
 
-`.github/workflows/pr-description-bot.yml` auto-generates PR descriptions via the Gemini API. It intentionally uses `pull_request` (not `pull_request_target`) and never checks out PR code — keep it that way; switching to `pull_request_target` here would expose secrets to arbitrary code from PR branches. Needs a `GEM_KEY` repo secret to function.
+`.github/workflows/pr-description-bot.yml` auto-generates PR descriptions via the Gemini API. Uses `pull_request`, not `pull_request_target`, and never checks out PR code: `pull_request_target` would expose secrets to arbitrary code from PR branches. Needs a `GEM_KEY` repo secret to function.
 
 ## Verify before declaring done
 
