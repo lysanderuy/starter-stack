@@ -5,6 +5,9 @@
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
 
+Setup steps, the auth flow, and the security model live in `README.md` —
+this file covers binding code rules only.
+
 # Architecture rules (binding)
 
 Layered, one-direction flow. Never skip or short-circuit a layer:
@@ -29,6 +32,14 @@ page/client component → TanStack Query hook (src/hooks) → api wrapper (src/l
 6. UI: `src/app/` + `src/components/` consuming the hook
 7. Docs: register the endpoint in `src/lib/api/openapi.ts` (path entry + `.meta()` on new/changed validator fields) — not auto-derived from the route file
 
+## Adding an optional integration
+
+External services with an API key (Resend, Upstash, etc.) — see `src/services/email.service.ts` and `src/lib/rate-limit.ts`:
+
+1. Add the env var(s) to `src/lib/env.ts` as `.optional()`, and to `.env.example`.
+2. Lazily construct the client on first use, never at module top level — breaks `next build` on a fresh clone with no env vars set.
+3. No-op or throw a clear "not configured" error if unset — never crash silently or block the app from booting.
+
 ## Hard rules
 
 - **Every new table's migration must include `ALTER TABLE "<name>" ENABLE ROW LEVEL SECURITY;`** (no policies needed). `npm run db:migrate` runs a guardrail that fails otherwise. Reason: Drizzle bypasses RLS, but Supabase's PostgREST (`/rest/v1`) exposes any public table without RLS to the anon key.
@@ -43,6 +54,16 @@ page/client component → TanStack Query hook (src/hooks) → api wrapper (src/l
 ## Naming
 
 `*.service.ts`, `*.validator.ts`, `*.store.ts`, `use-*.ts` (one hook per file), `*.test.ts` (colocated next to the file it tests). `src/components/ui` = generic primitives; `src/components/shared` = app-specific composites.
+
+## Comments
+
+- `//` only, 1-2 lines, states the current fact — never restates what the
+  code already shows, never narrates a past decision.
+- One place per fact: codebase-wide rules live here or in README, not
+  repeated per file.
+- Exception: `// Example X — replace/extend per project.` markers on
+  template files (`profiles.ts`, `ui.store.ts`, `use-debounce.ts`, etc.)
+  flag disposability for someone cloning the repo — not a WHY comment.
 
 ## Testing
 
