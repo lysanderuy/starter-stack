@@ -12,12 +12,22 @@
     "test:watch": "vitest",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "prepare": "husky",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate && node scripts/verify-db.mjs",
     "db:verify": "node scripts/verify-db.mjs",
     "db:auth-users": "node scripts/check-auth-users.mjs",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,mjs}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,css}": [
+      "prettier --write"
+    ]
   },
   "dependencies": {
     "@react-email/components": "^1.0.12",
@@ -48,6 +58,8 @@
     "drizzle-kit": "^0.31.10",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.1.0",
     "prettier": "^3.9.6",
     "tailwindcss": "^4",
     "typescript": "^5",
