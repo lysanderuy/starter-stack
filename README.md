@@ -186,8 +186,11 @@ protected `/dashboard` → logout.
 - **Route protection**: `src/proxy.ts` redirects unauthenticated hits on
   `protectedPrefixes` (extend per project); pages still check `getUser()`
   themselves — defense in depth.
-- **Layering exception**: auth pages call Supabase Auth directly via the SDK
-  (it manages its own cookies). App data still always goes through `/api`.
+- **Layering exception**: auth pages, plus `/api/auth/callback` and
+  `/api/auth/logout`, call Supabase Auth directly via the SDK (it manages
+  its own cookies) and skip the service/`ApiResponse` pattern — they're
+  redirect-driven browser navigations, not JSON API calls. App data still
+  always goes through `/api` with the full service/`ApiResponse` pattern.
 - **Signup → profile**: a Postgres trigger (`0001_auth-trigger-and-rls.sql`)
   auto-creates a `profiles` row for each new auth user.
 

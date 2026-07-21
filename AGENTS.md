@@ -20,7 +20,7 @@ page/client component → TanStack Query hook (src/hooks) → api wrapper (src/l
 - Client components NEVER import from `src/services` or `src/db`. They reach the backend only through `src/hooks` → the `api` wrapper. Both layers start their entry files with `import "server-only"` so an accidental client import fails the build instead of leaking server code/secrets to the browser — keep this line at the top of every `*.service.ts` and `src/db/index.ts`.
 - Route handlers stay thin: authenticate (`createClient()` from `src/lib/supabase/server` + `getUser()`), validate with Zod, delegate to a service, respond with `apiSuccess`/`apiError`/`handleApiError` from `src/lib/api/response`. All routes return the `ApiResponse<T>` envelope (`src/types/api.ts`).
 - Services own ALL business logic and DB access. They never touch `Request`/`Response`/cookies; they take plain inputs (e.g. `userId`) and must scope every query to the authenticated user.
-- Exception: auth itself calls the Supabase SDK directly from pages (it manages its own cookies). App data never does this.
+- Exception: auth itself calls the Supabase SDK directly — from pages, and from the redirect-driven `/api/auth/callback` and `/api/auth/logout` routes (they manage cookies and return redirects, not JSON, since they're browser navigations, not JSON calls). App data never does this.
 
 ## Adding a resource — follow this order
 
@@ -49,7 +49,7 @@ External services with an API key (Resend, Upstash, etc.) — see `src/services/
 - Server state lives in TanStack Query; client-only UI state in Zustand (`src/stores/*.store.ts`). Never mirror API data into a store.
 - New protected routes: add the prefix to `protectedPrefixes` in `src/lib/supabase/proxy.ts` AND check `getUser()` in the page/route itself.
 - New abuse-prone routes: add a stricter entry to the `overrides` array in `src/lib/rate-limit.ts` (mirrors the `protectedPrefixes` pattern). Rate limiting is per-IP, scoped to `/api/**` only, and no-ops if `UPSTASH_REDIS_REST_URL`/`TOKEN` aren't set — don't treat that as a bug to fix.
-- `/api/openapi.json` is the one deliberate exception to "every route returns `ApiResponse<T>`" — it serves the raw spec for external tooling (Scalar, codegen). `/api/docs` (Scalar UI) and `/api/openapi.json` are public/unauthenticated by design; gate them if that's ever a concern. The spec (`src/lib/api/openapi.ts`) is hand-maintained, not derived from route files — keep it in sync per the "Adding a resource" step above.
+- `/api/openapi.json`, `/api/auth/callback`, and `/api/auth/logout` are the deliberate exceptions to "every route returns `ApiResponse<T>`" — openapi.json serves the raw spec for external tooling (Scalar, codegen); the auth routes are browser redirects, not JSON calls. `/api/docs` (Scalar UI) and `/api/openapi.json` are public/unauthenticated by design; gate them if that's ever a concern. The spec (`src/lib/api/openapi.ts`) is hand-maintained, not derived from route files — keep it in sync per the "Adding a resource" step above.
 
 ## Naming
 
