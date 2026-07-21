@@ -2,17 +2,20 @@
 
 Reusable full-stack boilerplate: Next.js 16 + Supabase + Drizzle + Zod.
 
-| Layer        | Tech                                                              |
-| ------------ | ----------------------------------------------------------------- |
-| Frontend     | Next.js 16 (App Router) + React 19 + TypeScript + Tailwind CSS v4 |
-| Database     | Supabase (PostgreSQL)                                             |
-| Auth         | Supabase Auth (`@supabase/ssr`, cookie-based sessions)            |
-| ORM          | Drizzle ORM + drizzle-kit migrations                              |
-| Validation   | Zod v4                                                            |
-| Server state | TanStack Query v5 (API data: caching, mutations)                  |
-| Client state | Zustand (UI-only state: modals, sidebar, filters)                 |
-| API docs     | OpenAPI 3.1 (`zod-openapi`) + Scalar (`/api/docs`)                |
-| Testing      | Vitest (unit tests, colocated `*.test.ts`)                        |
+| Layer         | Tech                                                              |
+| ------------- | ----------------------------------------------------------------- |
+| Frontend      | Next.js 16 (App Router) + React 19 + TypeScript + Tailwind CSS v4 |
+| Database      | Supabase (PostgreSQL)                                             |
+| Auth          | Supabase Auth (`@supabase/ssr`, cookie-based sessions)            |
+| ORM           | Drizzle ORM + drizzle-kit migrations                              |
+| Validation    | Zod v4                                                            |
+| Server state  | TanStack Query v5 (API data: caching, mutations)                  |
+| Client state  | Zustand (UI-only state: modals, sidebar, filters)                 |
+| API docs      | OpenAPI 3.1 (`zod-openapi`) + Scalar (`/api/docs`)                |
+| Testing       | Vitest (unit tests, colocated `*.test.ts`)                        |
+| Rate limiting | Upstash Redis (`@upstash/ratelimit`), optional                    |
+| Code quality  | ESLint + Prettier + Husky/lint-staged pre-commit                  |
+| CI            | GitHub Actions — typecheck/lint/test + PR description bot         |
 
 ## Quick start
 
@@ -79,25 +82,55 @@ db (src/db, Drizzle)  /  Supabase
 - `/api/docs` — interactive reference (Scalar UI).
 - `/api/openapi.json` — the generated OpenAPI 3.1 spec, raw JSON (deliberately not wrapped in `ApiResponse<T>`).
 
-The spec is built by `src/lib/api/openapi.ts` from the Zod validators, and is **not** derived automatically from route files. When you add or change an endpoint: add `.meta({ description, example })` to the relevant fields in its `*.validator.ts`, then add/update the matching path entry in `src/lib/api/openapi.ts`. Both routes are public/unauthenticated by design (dev tooling) — gate them before shipping to a production audience that shouldn't see the API surface.
+Hand-maintained in `src/lib/api/openapi.ts`, not derived from route files — when you add/change an endpoint, add `.meta({ description, example })` to its validator fields and update the matching path entry there. Both routes are public/unauthenticated by design (dev tooling); gate them before a production launch that shouldn't expose the API surface.
+
+## Rate limiting
+
+`src/proxy.ts` rate-limits every `/api/**` request per IP before it reaches
+the route handler (pages aren't limited — abuse happens through `/api`, not
+navigation).
+
+- **Default**: 60 req/min per IP. **Override**: `/api/auth/*` → 10 req/min.
+- Backed by Upstash Redis (`src/lib/rate-limit.ts`) — REST-based, so it works from Edge middleware.
+- **Optional and lazy**: without `UPSTASH_REDIS_REST_URL`/`TOKEN` (see `.env.example`), requests always pass — no Upstash account needed to run the app.
+- Blocked requests log via `console.warn` (visible in your host's function logs) instead of an analytics dashboard.
+- To add a stricter route, extend the `overrides` array in `src/lib/rate-limit.ts` (mirrors `protectedPrefixes` in `src/lib/supabase/proxy.ts`).
 
 ## Testing
 
-Vitest, configured for pure Node (no jsdom/React Testing Library yet — add
-them if you start testing hooks/components). Tests are colocated next to the
-source file they cover: `thing.ts` → `thing.test.ts`.
+Vitest, pure Node (no jsdom/Testing Library yet). Tests are colocated:
+`thing.ts` → `thing.test.ts`.
 
 ```bash
 npm test         # run once
 npm run test:watch
 ```
 
-**Scope, deliberately:** only pure logic is covered so far — Zod validators
-(`src/validators`) and framework-free helpers (`src/lib/api/response.ts`).
-Services and route handlers touch Drizzle/Supabase and are _not_ tested yet;
-mocking the Drizzle client would give false confidence on query correctness,
-and this project doesn't run a dedicated test database. If that changes,
-prefer a local Supabase CLI instance over mocks for service-layer tests.
+- Covers only pure logic — Zod validators (`src/validators`) and framework-free helpers (`src/lib/api/response.ts`).
+- Services/routes touch Drizzle/Supabase and are untested on purpose: no dedicated test database, and mocking Drizzle would give false confidence. Prefer a local Supabase CLI instance over mocks if that changes.
+
+## Code quality
+
+Prettier (`printWidth: 100`) + ESLint.
+
+```bash
+npm run format         # write
+npm run format:check   # check only
+```
+
+Pre-commit (`.husky/pre-commit`, Husky + lint-staged):
+
+1. `eslint --fix` + `prettier --write` on staged files.
+2. `npm run typecheck` — whole project (type errors can't be scoped to staged files).
+
+Tests are excluded on purpose — kept fast locally; they run in CI instead.
+
+## CI
+
+`.github/workflows/`:
+
+- **`ci.yml`** — every PR + push to `main`: `npm ci` → typecheck → lint → test. The real verification gate; enable "require status checks" in branch protection to block merges on it.
+- **`pr-description-bot.yml`** — regenerates the PR description from the diff via Gemini (on open/reopen/ready-for-review/new commits, or a `/describe` comment). Needs a `GEM_KEY` repo secret. Doesn't work on fork PRs — GitHub withholds secrets and write access from fork-triggered runs.
 
 ## Project structure
 
@@ -162,12 +195,10 @@ protected `/dashboard` → logout.
 
 Drizzle connects as `postgres` and **bypasses RLS** — authorization lives in
 route handlers (`getUser()` + user-scoped queries). Every table must still
-`ENABLE ROW LEVEL SECURITY` (with no policies) to lock Supabase's
-auto-generated REST API (`/rest/v1`) away from the anon key.
-
-Enforced automatically: `db:migrate` runs the RLS guardrail
-(`scripts/verify-db.mjs`) after applying migrations and fails if any public
-table has RLS disabled.
+`ENABLE ROW LEVEL SECURITY` (no policies needed) to lock Supabase's
+auto-generated REST API (`/rest/v1`) away from the anon key. Enforced
+automatically: `db:migrate` runs the RLS guardrail (`scripts/verify-db.mjs`)
+and fails if any public table has RLS disabled.
 
 ## Database workflow
 
@@ -204,22 +235,12 @@ src/app/api/profile/
 src/hooks/use-profile.ts
 ```
 
-Also edit `src/app/api/auth/callback/route.ts` to drop the `sendWelcomeOnce`
-helper and its two service imports, and remove `RESEND_API_KEY` /
-`RESEND_FROM_EMAIL` from `.env.example` and `src/lib/env.ts` if you don't send
-any app email.
+Then:
 
-Also remove the `/api/profile` path entry and `profileResponseSchema` usage
-from `src/lib/api/openapi.ts` — otherwise the generated spec (`/api/docs`,
-`/api/openapi.json`) references a deleted endpoint/validator.
-
-Only delete migrations that were never applied (fresh Supabase project); if
-already applied, drop the objects first (`DROP TABLE profiles; DROP FUNCTION
-public.handle_new_user CASCADE;`) or reset the database.
-
-To bring a user companion table back later, reuse the pattern from
-`0001_auth-trigger-and-rls.sql`: FK to `auth.users(id) ON DELETE CASCADE`,
-`ENABLE ROW LEVEL SECURITY`, and an `AFTER INSERT ON auth.users` trigger.
+- Edit `src/app/api/auth/callback/route.ts` to drop `sendWelcomeOnce` and its two service imports; remove `RESEND_API_KEY`/`RESEND_FROM_EMAIL` from `.env.example`/`src/lib/env.ts` if you don't send app email.
+- Remove the `/api/profile` path entry and `profileResponseSchema` from `src/lib/api/openapi.ts` — otherwise the generated spec references a deleted endpoint.
+- Only delete migrations never applied to a live database; otherwise drop the objects first (`DROP TABLE profiles; DROP FUNCTION public.handle_new_user CASCADE;`) or reset the database.
+- To bring a companion table back later, reuse the pattern in `0001_auth-trigger-and-rls.sql`: FK to `auth.users(id) ON DELETE CASCADE`, RLS enabled, `AFTER INSERT ON auth.users` trigger.
 
 ## Adding a new resource
 
@@ -238,6 +259,7 @@ To bring a user companion table back later, reuse the pattern from
 | `dev` / `build` / `start` | Next.js                                                    |
 | `lint` / `typecheck`      | ESLint / `tsc --noEmit`                                    |
 | `test` / `test:watch`     | Vitest — run once / watch mode                             |
+| `format` / `format:check` | Prettier — write / check-only                              |
 | `db:generate`             | Generate migration from schema diff                        |
 | `db:migrate`              | Run pending migrations, then RLS guardrail                 |
 | `db:verify`               | RLS guardrail — fails if any public table has RLS disabled |
