@@ -33,9 +33,7 @@ function LoginForm() {
     setUnconfirmedEmail(null);
     setResent(false);
 
-    const parsed = signInSchema.safeParse(
-      Object.fromEntries(new FormData(event.currentTarget)),
-    );
+    const parsed = signInSchema.safeParse(Object.fromEntries(new FormData(event.currentTarget)));
     if (!parsed.success) {
       setError(parsed.error.issues[0].message);
       return;

@@ -5,8 +5,8 @@ export default function Home() {
     <main className="flex min-h-screen flex-col items-center justify-center gap-6 p-4 text-center">
       <h1 className="text-3xl font-semibold">starter-stack</h1>
       <p className="max-w-md text-sm text-foreground/70">
-        Next.js + Supabase + Drizzle + Zod boilerplate. Replace this page with
-        your app&apos;s landing page.
+        Next.js + Supabase + Drizzle + Zod boilerplate. Replace this page with your app&apos;s
+        landing page.
       </p>
       <div className="flex gap-3">
         <Link

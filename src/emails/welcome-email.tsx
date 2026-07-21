@@ -28,9 +28,7 @@ export function WelcomeEmail({ name, dashboardUrl }: WelcomeEmailProps) {
       <Body style={body}>
         <Container style={container}>
           <Heading style={heading}>Welcome, {name}</Heading>
-          <Text style={text}>
-            Your account is ready. Jump in whenever you&apos;re set.
-          </Text>
+          <Text style={text}>Your account is ready. Jump in whenever you&apos;re set.</Text>
           <Section style={{ textAlign: "center", margin: "32px 0" }}>
             <Button style={button} href={dashboardUrl}>
               Go to dashboard

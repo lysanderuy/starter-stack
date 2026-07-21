@@ -23,9 +23,7 @@ export default function ErrorPage({
       <p className="text-sm text-foreground/70">
         An unexpected error occurred. Try again, or come back later.
       </p>
-      {error.digest && (
-        <p className="text-xs text-foreground/50">Error ID: {error.digest}</p>
-      )}
+      {error.digest && <p className="text-xs text-foreground/50">Error ID: {error.digest}</p>}
       <button
         onClick={reset}
         className="mt-2 rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background hover:opacity-90"

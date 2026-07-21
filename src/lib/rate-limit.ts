@@ -53,7 +53,10 @@ export interface RateLimitResult {
   reset?: number;
 }
 
-export async function checkRateLimit(pathname: string, identifier: string): Promise<RateLimitResult> {
+export async function checkRateLimit(
+  pathname: string,
+  identifier: string,
+): Promise<RateLimitResult> {
   const match = overrides.find((o) => pathname.startsWith(o.prefix));
   const { name, requests, window } = match ?? { name: "default", ...DEFAULT_LIMIT };
 

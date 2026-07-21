@@ -11,6 +11,8 @@ describe("checkRateLimit (Upstash unconfigured)", () => {
   });
 
   it("allows requests on an overridden route", async () => {
-    await expect(checkRateLimit("/api/auth/callback", "1.2.3.4")).resolves.toEqual({ success: true });
+    await expect(checkRateLimit("/api/auth/callback", "1.2.3.4")).resolves.toEqual({
+      success: true,
+    });
   });
 });

@@ -40,6 +40,9 @@ describe("handleApiError", () => {
   it("falls back to a 500 for unknown errors", async () => {
     const response = handleApiError(new Error("boom"));
     expect(response.status).toBe(500);
-    await expect(response.json()).resolves.toEqual({ success: false, error: "Internal server error" });
+    await expect(response.json()).resolves.toEqual({
+      success: false,
+      error: "Internal server error",
+    });
   });
 });

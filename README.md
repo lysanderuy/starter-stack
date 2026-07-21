@@ -2,17 +2,17 @@
 
 Reusable full-stack boilerplate: Next.js 16 + Supabase + Drizzle + Zod.
 
-| Layer | Tech |
-|---|---|
-| Frontend | Next.js 16 (App Router) + React 19 + TypeScript + Tailwind CSS v4 |
-| Database | Supabase (PostgreSQL) |
-| Auth | Supabase Auth (`@supabase/ssr`, cookie-based sessions) |
-| ORM | Drizzle ORM + drizzle-kit migrations |
-| Validation | Zod v4 |
-| Server state | TanStack Query v5 (API data: caching, mutations) |
-| Client state | Zustand (UI-only state: modals, sidebar, filters) |
-| API docs | OpenAPI 3.1 (`zod-openapi`) + Scalar (`/api/docs`) |
-| Testing | Vitest (unit tests, colocated `*.test.ts`) |
+| Layer        | Tech                                                              |
+| ------------ | ----------------------------------------------------------------- |
+| Frontend     | Next.js 16 (App Router) + React 19 + TypeScript + Tailwind CSS v4 |
+| Database     | Supabase (PostgreSQL)                                             |
+| Auth         | Supabase Auth (`@supabase/ssr`, cookie-based sessions)            |
+| ORM          | Drizzle ORM + drizzle-kit migrations                              |
+| Validation   | Zod v4                                                            |
+| Server state | TanStack Query v5 (API data: caching, mutations)                  |
+| Client state | Zustand (UI-only state: modals, sidebar, filters)                 |
+| API docs     | OpenAPI 3.1 (`zod-openapi`) + Scalar (`/api/docs`)                |
+| Testing      | Vitest (unit tests, colocated `*.test.ts`)                        |
 
 ## Quick start
 
@@ -23,11 +23,11 @@ Reusable full-stack boilerplate: Next.js 16 + Supabase + Drizzle + Zod.
    cp .env.example .env.local   # .env also works
    ```
 
-   | Variable | Value |
-   |---|---|
-   | `NEXT_PUBLIC_SUPABASE_URL` / `..._ANON_KEY` | Dashboard → Project Settings → API |
-   | `DATABASE_URL` | **Transaction pooler** URL (port 6543) — app runtime |
-   | `DIRECT_URL` | **Session pooler** URL (port 5432) — drizzle-kit only |
+   | Variable                                    | Value                                                 |
+   | ------------------------------------------- | ----------------------------------------------------- |
+   | `NEXT_PUBLIC_SUPABASE_URL` / `..._ANON_KEY` | Dashboard → Project Settings → API                    |
+   | `DATABASE_URL`                              | **Transaction pooler** URL (port 6543) — app runtime  |
+   | `DIRECT_URL`                                | **Session pooler** URL (port 5432) — drizzle-kit only |
 
    Don't swap the pooler ports: migrations fail through the transaction
    pooler (no prepared statements — the app client runs `prepare: false`
@@ -94,7 +94,7 @@ npm run test:watch
 
 **Scope, deliberately:** only pure logic is covered so far — Zod validators
 (`src/validators`) and framework-free helpers (`src/lib/api/response.ts`).
-Services and route handlers touch Drizzle/Supabase and are *not* tested yet;
+Services and route handlers touch Drizzle/Supabase and are _not_ tested yet;
 mocking the Drizzle client would give false confidence on query correctness,
 and this project doesn't run a dedicated test database. If that changes,
 prefer a local Supabase CLI instance over mocks for service-layer tests.
@@ -233,14 +233,14 @@ To bring a user companion table back later, reuse the pattern from
 
 ## Scripts
 
-| Script | Purpose |
-|---|---|
-| `dev` / `build` / `start` | Next.js |
-| `lint` / `typecheck` | ESLint / `tsc --noEmit` |
-| `test` / `test:watch` | Vitest — run once / watch mode |
-| `db:generate` | Generate migration from schema diff |
-| `db:migrate` | Run pending migrations, then RLS guardrail |
-| `db:verify` | RLS guardrail — fails if any public table has RLS disabled |
-| `db:auth-users` | Debug: list recent signups + email confirmation status |
-| `db:push` | Push schema directly (prototyping only) |
-| `db:studio` | Drizzle Studio data browser |
+| Script                    | Purpose                                                    |
+| ------------------------- | ---------------------------------------------------------- |
+| `dev` / `build` / `start` | Next.js                                                    |
+| `lint` / `typecheck`      | ESLint / `tsc --noEmit`                                    |
+| `test` / `test:watch`     | Vitest — run once / watch mode                             |
+| `db:generate`             | Generate migration from schema diff                        |
+| `db:migrate`              | Run pending migrations, then RLS guardrail                 |
+| `db:verify`               | RLS guardrail — fails if any public table has RLS disabled |
+| `db:auth-users`           | Debug: list recent signups + email confirmation status     |
+| `db:push`                 | Push schema directly (prototyping only)                    |
+| `db:studio`               | Drizzle Studio data browser                                |
