@@ -12,6 +12,7 @@ Reusable full-stack boilerplate: Next.js 16 + Supabase + Drizzle + Zod.
 | Server state | TanStack Query v5 (API data: caching, mutations) |
 | Client state | Zustand (UI-only state: modals, sidebar, filters) |
 | API docs | OpenAPI 3.1 (`zod-openapi`) + Scalar (`/api/docs`) |
+| Testing | Vitest (unit tests, colocated `*.test.ts`) |
 
 ## Quick start
 
@@ -79,6 +80,24 @@ db (src/db, Drizzle)  /  Supabase
 - `/api/openapi.json` — the generated OpenAPI 3.1 spec, raw JSON (deliberately not wrapped in `ApiResponse<T>`).
 
 The spec is built by `src/lib/api/openapi.ts` from the Zod validators, and is **not** derived automatically from route files. When you add or change an endpoint: add `.meta({ description, example })` to the relevant fields in its `*.validator.ts`, then add/update the matching path entry in `src/lib/api/openapi.ts`. Both routes are public/unauthenticated by design (dev tooling) — gate them before shipping to a production audience that shouldn't see the API surface.
+
+## Testing
+
+Vitest, configured for pure Node (no jsdom/React Testing Library yet — add
+them if you start testing hooks/components). Tests are colocated next to the
+source file they cover: `thing.ts` → `thing.test.ts`.
+
+```bash
+npm test         # run once
+npm run test:watch
+```
+
+**Scope, deliberately:** only pure logic is covered so far — Zod validators
+(`src/validators`) and framework-free helpers (`src/lib/api/response.ts`).
+Services and route handlers touch Drizzle/Supabase and are *not* tested yet;
+mocking the Drizzle client would give false confidence on query correctness,
+and this project doesn't run a dedicated test database. If that changes,
+prefer a local Supabase CLI instance over mocks for service-layer tests.
 
 ## Project structure
 
@@ -218,6 +237,7 @@ To bring a user companion table back later, reuse the pattern from
 |---|---|
 | `dev` / `build` / `start` | Next.js |
 | `lint` / `typecheck` | ESLint / `tsc --noEmit` |
+| `test` / `test:watch` | Vitest — run once / watch mode |
 | `db:generate` | Generate migration from schema diff |
 | `db:migrate` | Run pending migrations, then RLS guardrail |
 | `db:verify` | RLS guardrail — fails if any public table has RLS disabled |

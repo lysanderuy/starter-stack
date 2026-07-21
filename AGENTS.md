@@ -40,11 +40,21 @@ page/client component → TanStack Query hook (src/hooks) → api wrapper (src/l
 
 ## Naming
 
-`*.service.ts`, `*.validator.ts`, `*.store.ts`, `use-*.ts` (one hook per file). `src/components/ui` = generic primitives; `src/components/shared` = app-specific composites.
+`*.service.ts`, `*.validator.ts`, `*.store.ts`, `use-*.ts` (one hook per file), `*.test.ts` (colocated next to the file it tests). `src/components/ui` = generic primitives; `src/components/shared` = app-specific composites.
+
+## Testing
+
+Vitest, unit-only, node environment (no jsdom yet). Only pure logic is
+covered — validators (`src/validators`) and framework-free `src/lib`
+helpers. Services and routes touch Drizzle/Supabase and are intentionally
+untested for now: this project has no dedicated test database, and mocking
+the Drizzle client would give false confidence rather than real coverage.
+Don't add jsdom, Testing Library, or DB mocking to "fix" this without
+checking with the user first — it's a deliberate scope boundary, not a gap.
 
 ## Verify before declaring done
 
-`npx tsc --noEmit && npm run lint` after every change; `npm run db:verify` after schema changes. Do not run `npm run build` without asking.
+`npx tsc --noEmit && npm run lint && npm test` after every change; `npm run db:verify` after schema changes. Do not run `npm run build` without asking.
 
 ## Commits
 
