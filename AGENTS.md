@@ -37,6 +37,7 @@ page/client component → TanStack Query hook (src/hooks) → api wrapper (src/l
 - Server env vars go through `src/lib/env.ts` (Zod-validated, server-only import). Client code uses `process.env.NEXT_PUBLIC_*` directly.
 - Server state lives in TanStack Query; client-only UI state in Zustand (`src/stores/*.store.ts`). Never mirror API data into a store.
 - New protected routes: add the prefix to `protectedPrefixes` in `src/lib/supabase/proxy.ts` AND check `getUser()` in the page/route itself.
+- New abuse-prone routes: add a stricter entry to the `overrides` array in `src/lib/rate-limit.ts` (mirrors the `protectedPrefixes` pattern). Rate limiting is per-IP, scoped to `/api/**` only, and no-ops if `UPSTASH_REDIS_REST_URL`/`TOKEN` aren't set — don't treat that as a bug to fix.
 - `/api/openapi.json` is the one deliberate exception to "every route returns `ApiResponse<T>`" — it serves the raw spec for external tooling (Scalar, codegen). `/api/docs` (Scalar UI) and `/api/openapi.json` are public/unauthenticated by design; gate them if that's ever a concern. The spec (`src/lib/api/openapi.ts`) is hand-maintained, not derived from route files — keep it in sync per the "Adding a resource" step above.
 
 ## Naming
@@ -52,6 +53,12 @@ untested for now: this project has no dedicated test database, and mocking
 the Drizzle client would give false confidence rather than real coverage.
 Don't add jsdom, Testing Library, or DB mocking to "fix" this without
 checking with the user first — it's a deliberate scope boundary, not a gap.
+
+## CI and pre-commit
+
+`.husky/pre-commit` runs `lint-staged` (ESLint + Prettier on staged files) then `npm run typecheck` — deliberately **not** `npm test`, to keep commits fast. Tests run in `.github/workflows/ci.yml` instead, alongside typecheck/lint, on every PR and push to `main`. Don't "fix" the pre-commit hook by re-adding `npm test` — that was a deliberate choice, not an oversight.
+
+`.github/workflows/pr-description-bot.yml` auto-generates PR descriptions via the Gemini API. It intentionally uses `pull_request` (not `pull_request_target`) and never checks out PR code — keep it that way; switching to `pull_request_target` here would expose secrets to arbitrary code from PR branches. Needs a `GEM_KEY` repo secret to function.
 
 ## Verify before declaring done
 
