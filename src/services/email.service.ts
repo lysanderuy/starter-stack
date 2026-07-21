@@ -5,15 +5,8 @@ import { Resend } from "resend";
 import { env } from "@/lib/env";
 import { WelcomeEmail } from "@/emails/welcome-email";
 
-/**
- * Transactional email. Owns the Resend client and all send logic — callers
- * (other services, route handlers) pass plain inputs. Never touches
- * Request/Response. Throws on send failure so handleApiError can map it.
- *
- * NOTE: this covers app-sent email only. Auth emails (confirm / reset /
- * magic-link) are sent by Supabase Auth over SMTP and are configured in the
- * Supabase dashboard, not here.
- */
+// Owns the Resend client + send logic; throws on failure so handleApiError can map it.
+// App email only — auth email (confirm/reset) is Supabase SMTP, configured in its dashboard.
 
 // Lazy so a fresh clone / CI without RESEND_API_KEY can still `next build`
 // (mirrors the lazy env proxy). First real send fails fast with a clear error.

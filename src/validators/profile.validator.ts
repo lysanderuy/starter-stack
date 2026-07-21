@@ -1,9 +1,6 @@
 import { z } from "zod";
 
-/**
- * Example validator. One file per resource. Zod schemas are the single
- * source of truth for input shapes — infer TS types from them.
- */
+// Example validator — replace/extend per project.
 export const updateProfileSchema = z.object({
   displayName: z
     .string()

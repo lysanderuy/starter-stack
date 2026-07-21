@@ -1,10 +1,7 @@
 "use client";
 
-/**
- * Last-resort boundary: catches errors in the root layout itself.
- * Must render its own <html>/<body>; app CSS is not available here,
- * so styling is inline.
- */
+// Catches errors in the root layout itself — must render its own <html>/<body>,
+// and app CSS isn't available (hence inline styles).
 export default function GlobalError({
   error,
   reset,

@@ -1,9 +1,6 @@
 import { createBrowserClient } from "@supabase/ssr";
 
-/**
- * Supabase client for Client Components ("use client").
- * Returns a singleton under the hood — safe to call per component.
- */
+// Client Components only ("use client"). Returns a singleton — safe to call per component.
 export function createClient() {
   return createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

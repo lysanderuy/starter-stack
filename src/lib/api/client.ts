@@ -1,6 +1,6 @@
 import type { ApiResponse } from "@/types/api";
 
-/** Client-side fetch wrapper. Frontend talks to /api/** only through this. */
+// Client-side fetch wrapper.
 
 export class ApiError extends Error {
   constructor(

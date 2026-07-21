@@ -4,10 +4,8 @@ import { emailService } from "@/services/email.service";
 import { profileService } from "@/services/profile.service";
 import { createClient } from "@/lib/supabase/server";
 
-/**
- * Auth callback — target of email confirmation links and OAuth redirects.
- * Exchanges the one-time code for a session cookie.
- */
+// Auth callback — target of email confirmation links and OAuth redirects.
+// Exchanges the one-time code for a session cookie.
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
@@ -30,11 +28,8 @@ export async function GET(request: Request) {
   return NextResponse.redirect(`${origin}/login?error=Could not authenticate`);
 }
 
-/**
- * First-confirmation welcome email. This callback also fires for OAuth and
- * recovery, so we gate on an atomic claim to send exactly once. Email is
- * best-effort: a Resend failure releases the claim and never blocks login.
- */
+// Sends the welcome email once (this callback also fires for OAuth/recovery,
+// hence the atomic claim). Best-effort — a Resend failure releases the claim.
 async function sendWelcomeOnce(userId: string, email: string | undefined, origin: string) {
   if (!email) return;
 
@@ -49,8 +44,6 @@ async function sendWelcomeOnce(userId: string, email: string | undefined, origin
     });
   } catch (err) {
     await profileService.releaseWelcomeClaim(userId, claim.claimedAt);
-    // Minimum bar — wire this to your logger/alerting in production so silent
-    // welcome-email failures are observable.
     console.error("Welcome email failed:", err);
   }
 }

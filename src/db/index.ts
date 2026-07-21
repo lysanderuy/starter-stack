@@ -9,9 +9,8 @@ import * as schema from "./schema";
 
 type Db = PostgresJsDatabase<typeof schema>;
 
-// Lazy init: importing this module (e.g. during `next build` page-data
-// collection) must not require DATABASE_URL. The instance is cached on
-// globalThis so dev hot reloads don't exhaust the Supabase connection pool.
+// Lazy init — next build imports this without DATABASE_URL set. Cached on
+// globalThis so dev hot reload doesn't exhaust the connection pool.
 const globalForDb = globalThis as unknown as { db?: Db };
 
 function createDb(): Db {

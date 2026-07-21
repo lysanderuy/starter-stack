@@ -1,13 +1,7 @@
 import { z } from "zod";
 
-/**
- * Server-side environment validation. Validated lazily on first access —
- * `next build` imports route modules while collecting page data, and a
- * fresh clone / CI runner has no env vars; eager parsing would fail the
- * build. At runtime the first access still fails fast with a clear error.
- * Do NOT import this from client components — use process.env.NEXT_PUBLIC_*
- * directly there (inlined at build time).
- */
+// Lazy validation — next build imports routes before env vars exist. Server-only;
+// client components must use process.env.NEXT_PUBLIC_* directly.
 const envSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z.url(),
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),

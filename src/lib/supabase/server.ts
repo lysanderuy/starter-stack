@@ -3,10 +3,8 @@ import { cookies } from "next/headers";
 
 import { env } from "@/lib/env";
 
-/**
- * Supabase client for Server Components, Route Handlers, and Server Actions.
- * Create a new instance per request — never share across requests.
- */
+// Server Components/Route Handlers/Server Actions only — new instance per
+// request, never share across requests.
 export async function createClient() {
   const cookieStore = await cookies();
 

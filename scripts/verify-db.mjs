@@ -4,12 +4,8 @@ import postgres from "postgres";
 config({ path: ".env.local" });
 config({ path: ".env" });
 
-/**
- * RLS guardrail: fails (exit 1) if any table in the public schema has
- * Row Level Security disabled. Without RLS, a table is readable via
- * Supabase's auto-generated REST API (/rest/v1) with the anon key —
- * completely outside the app's API layer. Run after every migration.
- */
+// RLS guardrail — fails if any public table has RLS disabled. Without it,
+// Supabase's REST API (/rest/v1) exposes the table via the anon key.
 const sql = postgres(process.env.DIRECT_URL ?? process.env.DATABASE_URL);
 
 const tables = await sql`

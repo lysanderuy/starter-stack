@@ -1,9 +1,6 @@
 import { pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
-/**
- * Example table. App-level user profile keyed to Supabase Auth users
- * (id mirrors auth.users.id). Replace or extend per project.
- */
+// Example table — replace/extend per project. `id` mirrors `auth.users.id`.
 export const profiles = pgTable("profiles", {
   id: uuid("id").primaryKey(),
   email: text("email").notNull(),

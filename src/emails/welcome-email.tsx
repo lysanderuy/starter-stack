@@ -15,11 +15,8 @@ export interface WelcomeEmailProps {
   dashboardUrl: string;
 }
 
-/**
- * Example transactional template. Templates are plain React — they take typed
- * props and render to HTML. The email.service passes the element to Resend,
- * which renders it. Preview locally with `npx react-email dev`.
- */
+// Example transactional template — replace/extend per project.
+// Preview locally with `npx react-email dev`.
 export function WelcomeEmail({ name, dashboardUrl }: WelcomeEmailProps) {
   return (
     <Html>

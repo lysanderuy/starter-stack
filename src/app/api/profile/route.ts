@@ -3,10 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { profileService } from "@/services/profile.service";
 import { updateProfileSchema } from "@/validators/profile.validator";
 
-/**
- * Example route handler showing the layering pattern:
- * authenticate -> validate (Zod) -> delegate to service -> respond.
- */
+// Example route handler — replace/extend per project.
 
 export async function GET() {
   try {

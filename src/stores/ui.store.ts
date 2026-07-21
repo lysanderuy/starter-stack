@@ -1,10 +1,6 @@
 import { create } from "zustand";
 
-/**
- * Example Zustand store. One store per concern (*.store.ts), for CLIENT-ONLY
- * UI state (modals, sidebar, filters). Server data belongs in TanStack Query,
- * not here.
- */
+// Example Zustand store — replace/extend per project.
 interface UiState {
   sidebarOpen: boolean;
   toggleSidebar: () => void;

@@ -1,7 +1,4 @@
-/**
- * Streaming fallback shown while the server component fetches. Replace the
- * skeleton with one matching your page; this demonstrates the convention.
- */
+// Example loading skeleton — replace/extend per project.
 export default function DashboardLoading() {
   return (
     <main className="mx-auto w-full max-w-2xl p-8">

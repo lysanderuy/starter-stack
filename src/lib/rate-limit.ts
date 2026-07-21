@@ -4,13 +4,8 @@ import type { NextRequest } from "next/server";
 
 import { env } from "@/lib/env";
 
-/**
- * Rate limiting via Upstash Redis (REST-based, so it works from Edge
- * middleware — see src/proxy.ts). Optional and lazy: without
- * UPSTASH_REDIS_REST_URL/TOKEN set, checkRateLimit() always allows the
- * request, so a fresh clone still runs unthrottled until Upstash is
- * configured (see .env.example). Do NOT import this from client components.
- */
+// Upstash-backed (REST — works from Edge middleware). No-op without
+// UPSTASH_REDIS_REST_URL/TOKEN set (see .env.example). Server-only.
 
 let redis: Redis | null = null;
 function getRedis(): Redis | null {
@@ -40,10 +35,6 @@ function getLimiter(name: string, requests: number, window: Window): Ratelimit |
 
 const DEFAULT_LIMIT = { requests: 60, window: "1 m" as Window };
 
-// Path-prefix overrides, checked in order — first match wins, else
-// DEFAULT_LIMIT applies. Extend this list per route as new abuse-prone
-// endpoints show up (mirrors the protectedPrefixes pattern in
-// src/lib/supabase/proxy.ts).
 const overrides: Array<{ prefix: string; name: string; requests: number; window: Window }> = [
   { prefix: "/api/auth", name: "auth", requests: 10, window: "1 m" },
 ];
@@ -67,10 +58,8 @@ export async function checkRateLimit(
   return { success, reset };
 }
 
-/**
- * IP-based identifier. Vercel sets x-forwarded-for; local dev has neither
- * header, so all local requests share one bucket — fine for local testing.
- */
+// IP-based identifier — Vercel sets x-forwarded-for. Local dev has neither
+// header, so all local requests share one bucket (fine for testing).
 export function getClientIp(request: NextRequest): string {
   const forwardedFor = request.headers.get("x-forwarded-for");
   if (forwardedFor) return forwardedFor.split(",")[0]!.trim();

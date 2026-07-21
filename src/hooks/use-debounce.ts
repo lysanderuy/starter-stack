@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-/** Example hook. One hook per file, named use-*.ts. */
+// Example hook — replace/extend per project.
 export function useDebounce<T>(value: T, delayMs = 300): T {
   const [debounced, setDebounced] = useState(value);
 

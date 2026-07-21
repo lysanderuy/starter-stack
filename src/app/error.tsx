@@ -2,10 +2,7 @@
 
 import { useEffect } from "react";
 
-/**
- * Segment error boundary — catches render/data errors below the root layout.
- * Hook error reporting (e.g. Sentry) into the effect.
- */
+// Segment error boundary — catches render/data errors below the root layout.
 export default function ErrorPage({
   error,
   reset,

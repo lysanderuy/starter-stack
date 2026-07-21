@@ -2,7 +2,6 @@ import { z } from "zod";
 import { createDocument } from "zod-openapi";
 import { profileResponseSchema, updateProfileSchema } from "@/validators/profile.validator";
 
-/** Wraps a data schema in the `{ success: true, data }` envelope (see src/types/api.ts). */
 function successEnvelope<T extends z.ZodType>(dataSchema: T) {
   return z.object({
     success: z.literal(true),

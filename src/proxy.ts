@@ -4,12 +4,9 @@ import { apiError } from "@/lib/api/response";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { updateSession } from "@/lib/supabase/proxy";
 
-// Next.js 16 proxy (formerly middleware.ts) — runs on every matched request.
 export default async function proxy(request: NextRequest) {
-  // Rate limiting only applies to API routes — page navigations/prefetches
-  // aren't the abuse surface that matters (DB writes, email sends, auth
-  // attempts all happen through /api). See src/lib/rate-limit.ts to add or
-  // adjust per-route overrides.
+  // Only /api is rate-limited — page navigations aren't the abuse surface.
+  // See src/lib/rate-limit.ts for overrides.
   if (request.nextUrl.pathname.startsWith("/api")) {
     const ip = getClientIp(request);
     const result = await checkRateLimit(request.nextUrl.pathname, ip);
@@ -30,9 +27,7 @@ export default async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except static assets.
-     */
+    // Match all request paths except static assets.
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
