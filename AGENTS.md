@@ -26,6 +26,7 @@ page/client component → TanStack Query hook (src/hooks) → api wrapper (src/l
 4. Route: `src/app/api/<things>/route.ts`
 5. Hook: `src/hooks/use-<thing>.ts` (`useQuery`/`useMutation` wrapping the `api` client)
 6. UI: `src/app/` + `src/components/` consuming the hook
+7. Docs: register the endpoint in `src/lib/api/openapi.ts` (path entry + `.meta()` on new/changed validator fields) — not auto-derived from the route file
 
 ## Hard rules
 
@@ -35,6 +36,7 @@ page/client component → TanStack Query hook (src/hooks) → api wrapper (src/l
 - Server env vars go through `src/lib/env.ts` (Zod-validated, server-only import). Client code uses `process.env.NEXT_PUBLIC_*` directly.
 - Server state lives in TanStack Query; client-only UI state in Zustand (`src/stores/*.store.ts`). Never mirror API data into a store.
 - New protected routes: add the prefix to `protectedPrefixes` in `src/lib/supabase/proxy.ts` AND check `getUser()` in the page/route itself.
+- `/api/openapi.json` is the one deliberate exception to "every route returns `ApiResponse<T>`" — it serves the raw spec for external tooling (Scalar, codegen). `/api/docs` (Scalar UI) and `/api/openapi.json` are public/unauthenticated by design; gate them if that's ever a concern. The spec (`src/lib/api/openapi.ts`) is hand-maintained, not derived from route files — keep it in sync per the "Adding a resource" step above.
 
 ## Naming
 

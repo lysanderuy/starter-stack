@@ -11,6 +11,7 @@ Reusable full-stack boilerplate: Next.js 16 + Supabase + Drizzle + Zod.
 | Validation | Zod v4 |
 | Server state | TanStack Query v5 (API data: caching, mutations) |
 | Client state | Zustand (UI-only state: modals, sidebar, filters) |
+| API docs | OpenAPI 3.1 (`zod-openapi`) + Scalar (`/api/docs`) |
 
 ## Quick start
 
@@ -69,8 +70,15 @@ db (src/db, Drizzle)  /  Supabase
 - **Frontend never imports services or `db`.** It calls `/api/**` through the `api` wrapper only.
 - **Route handlers stay thin**: authenticate (Supabase), validate input (Zod), delegate to a service, wrap the result with `apiSuccess` / `apiError`.
 - **Services own business logic and DB access.** They never touch `Request` / `Response` / cookies.
-- **All API routes return the `ApiResponse<T>` envelope** (`src/types/api.ts`).
+- **All API routes return the `ApiResponse<T>` envelope** (`src/types/api.ts`) — except `/api/openapi.json`, which returns the raw spec for external tooling.
 - **Server state vs client state**: API data lives in TanStack Query (via `src/hooks`); UI-only state in Zustand stores (`src/stores`). Never mirror API data into a store.
+
+## API docs
+
+- `/api/docs` — interactive reference (Scalar UI).
+- `/api/openapi.json` — the generated OpenAPI 3.1 spec, raw JSON (deliberately not wrapped in `ApiResponse<T>`).
+
+The spec is built by `src/lib/api/openapi.ts` from the Zod validators, and is **not** derived automatically from route files. When you add or change an endpoint: add `.meta({ description, example })` to the relevant fields in its `*.validator.ts`, then add/update the matching path entry in `src/lib/api/openapi.ts`. Both routes are public/unauthenticated by design (dev tooling) — gate them before shipping to a production audience that shouldn't see the API surface.
 
 ## Project structure
 
@@ -84,6 +92,8 @@ src/
 │   ├── not-found.tsx     # 404
 │   └── api/              # Route handlers only — no UI under api/
 │       ├── auth/         # callback (code exchange) + logout
+│       ├── docs/         # Scalar interactive API reference UI
+│       ├── openapi.json/ # generated OpenAPI 3.1 spec (raw JSON, no envelope)
 │       └── profile/      # example: GET/PATCH /api/profile
 ├── components/
 │   ├── ui/               # Generic primitives (buttons, inputs, ...)
@@ -91,7 +101,7 @@ src/
 ├── hooks/                # React hooks (use-*.ts), incl. TanStack Query hooks
 ├── stores/               # Zustand stores (*.store.ts) — client-only UI state
 ├── lib/
-│   ├── api/              # client.ts (fetch wrapper) + response.ts (envelope helpers)
+│   ├── api/              # client.ts (fetch wrapper) + response.ts (envelope helpers) + openapi.ts (spec builder)
 │   ├── query/            # QueryClient provider (wired in app/layout.tsx)
 │   ├── supabase/         # client.ts (browser), server.ts (RSC/routes), proxy.ts (session refresh)
 │   └── env.ts            # Zod-validated env vars (server only, lazy)
@@ -180,6 +190,10 @@ helper and its two service imports, and remove `RESEND_API_KEY` /
 `RESEND_FROM_EMAIL` from `.env.example` and `src/lib/env.ts` if you don't send
 any app email.
 
+Also remove the `/api/profile` path entry and `profileResponseSchema` usage
+from `src/lib/api/openapi.ts` — otherwise the generated spec (`/api/docs`,
+`/api/openapi.json`) references a deleted endpoint/validator.
+
 Only delete migrations that were never applied (fresh Supabase project); if
 already applied, drop the objects first (`DROP TABLE profiles; DROP FUNCTION
 public.handle_new_user CASCADE;`) or reset the database.
@@ -196,6 +210,7 @@ To bring a user companion table back later, reuse the pattern from
 4. **Route** — `src/app/api/things/route.ts` (auth → validate → service → respond).
 5. **Hook** — `src/hooks/use-thing.ts` (`useQuery`/`useMutation` wrapping the `api` client).
 6. **Frontend** — components consume the hook; UI in `app/` + `components/`. UI-only state goes in `src/stores` if it crosses component trees.
+7. **Docs** — register the endpoint in `src/lib/api/openapi.ts` (not auto-derived from the route file).
 
 ## Scripts
 
