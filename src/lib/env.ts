@@ -17,6 +17,10 @@ const envSchema = z.object({
   RESEND_API_KEY: z.string().min(1).optional(),
   // Verified sender, e.g. "Acme <hello@mail.yourdomain.com>".
   RESEND_FROM_EMAIL: z.string().min(1).optional(),
+  // Optional: rate limiting (src/lib/rate-limit.ts) needs these, but the app
+  // boots without them — requests just pass through unthrottled.
+  UPSTASH_REDIS_REST_URL: z.url().optional(),
+  UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
 });
 
 type Env = z.infer<typeof envSchema>;
@@ -31,6 +35,8 @@ export const env: Env = new Proxy({} as Env, {
       DATABASE_URL: process.env.DATABASE_URL,
       RESEND_API_KEY: process.env.RESEND_API_KEY,
       RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL,
+      UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL,
+      UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
     });
     return cached[key as keyof Env];
   },
