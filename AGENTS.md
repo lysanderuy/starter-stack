@@ -21,6 +21,7 @@ page/client component → TanStack Query hook (src/hooks) → api wrapper (src/l
 - Route handlers stay thin: authenticate (`createClient()` from `src/lib/supabase/server` + `getUser()`), validate with Zod, delegate to a service, respond with `apiSuccess`/`apiError`/`handleApiError` from `src/lib/api/response`. All routes return the `ApiResponse<T>` envelope (`src/types/api.ts`).
 - Services own ALL business logic and DB access. They never touch `Request`/`Response`/cookies; they take plain inputs (e.g. `userId`) and must scope every query to the authenticated user.
 - Exception: auth itself calls the Supabase SDK directly — from pages, and from the redirect-driven `/api/auth/callback` and `/api/auth/logout` routes (they manage cookies and return redirects, not JSON, since they're browser navigations, not JSON calls). App data never does this.
+- A third exception, different in kind: `/api/auth/email-hook` is inbound — Supabase calls it, not the browser. It authenticates via webhook signature (`standardwebhooks`), not session/cookies, and returns Supabase's required JSON shape instead of a redirect or `ApiResponse<T>`.
 
 ## Adding a resource — follow this order
 
@@ -49,7 +50,7 @@ External services with an API key (Resend, Upstash, etc.) — see `src/services/
 - Server state lives in TanStack Query; client-only UI state in Zustand (`src/stores/*.store.ts`). Never mirror API data into a store.
 - New protected routes: add the prefix to `protectedPrefixes` in `src/lib/supabase/proxy.ts` AND check `getUser()` in the page/route itself.
 - New abuse-prone routes: add a stricter entry to the `overrides` array in `src/lib/rate-limit.ts` (mirrors the `protectedPrefixes` pattern). Rate limiting is per-IP, scoped to `/api/**` only, and no-ops if `UPSTASH_REDIS_REST_URL`/`TOKEN` aren't set — don't treat that as a bug to fix.
-- `/api/openapi.json`, `/api/auth/callback`, and `/api/auth/logout` are the deliberate exceptions to "every route returns `ApiResponse<T>`" — openapi.json serves the raw spec for external tooling (Scalar, codegen); the auth routes are browser redirects, not JSON calls. `/api/docs` (Scalar UI) and `/api/openapi.json` are public/unauthenticated by design; gate them if that's ever a concern. The spec (`src/lib/api/openapi.ts`) is hand-maintained, not derived from route files — keep it in sync per the "Adding a resource" step above.
+- `/api/openapi.json`, `/api/auth/callback`, `/api/auth/logout`, and `/api/auth/email-hook` are the deliberate exceptions to "every route returns `ApiResponse<T>`" — openapi.json serves the raw spec for external tooling (Scalar, codegen); the auth routes are browser redirects, not JSON calls; email-hook returns the JSON shape Supabase's webhook contract requires. `/api/docs` (Scalar UI) and `/api/openapi.json` are public/unauthenticated by design; gate them if that's ever a concern. The spec (`src/lib/api/openapi.ts`) is hand-maintained, not derived from route files — keep it in sync per the "Adding a resource" step above.
 
 ## Naming
 

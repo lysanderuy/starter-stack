@@ -40,8 +40,16 @@ Reusable full-stack boilerplate: Next.js 16 + Supabase + Drizzle + Zod.
    - **URL Configuration → Redirect URLs**: add
      `http://localhost:3000/api/auth/callback` (+ production URL later).
      Confirmation and recovery emails bounce without this.
-   - **Production**: configure custom SMTP (Project Settings → Auth). The
-     built-in sender is dev-only — rate-limited (~2/hour), slow, spam-prone.
+   - **Production**: configure the **Send Email Hook** (Dashboard →
+     Authentication → Hooks) to point at `/api/auth/email-hook`, using the
+     `SEND_EMAIL_HOOK_SECRET` from `.env.example`. Confirm/recovery emails
+     are then rendered by this app (`src/emails/confirm-signup-email.tsx`,
+     `reset-password-email.tsx`) and sent via Resend instead of Supabase's
+     dashboard-edited templates.
+   - **Local dev**: keeps using Supabase's built-in sender (unchanged) —
+     it's rate-limited (~2/hour), slow, spam-prone, and the hook isn't
+     reachable from Supabase's servers against `localhost`, so this is
+     prod-only by design.
 
 4. Apply the bundled example schema — or remove it first (see
    [Removing the example](#removing-the-profiles-example)):
@@ -191,6 +199,9 @@ protected `/dashboard` → logout.
   its own cookies) and skip the service/`ApiResponse` pattern — they're
   redirect-driven browser navigations, not JSON API calls. App data still
   always goes through `/api` with the full service/`ApiResponse` pattern.
+  `/api/auth/email-hook` is also outside the normal pattern, but as an
+  inbound webhook from Supabase (signature-verified, not
+  session-authenticated) rather than a browser navigation.
 - **Signup → profile**: a Postgres trigger (`0001_auth-trigger-and-rls.sql`)
   auto-creates a `profiles` row for each new auth user.
 
@@ -232,15 +243,20 @@ src/db/schema/profiles.ts            # + remove its export from schema/index.ts
 src/db/migrations/0000_*.sql, 0001_*.sql, 0002_*.sql, meta/   # keep the migrations dir
 src/validators/profile.validator.ts
 src/services/profile.service.ts
-src/services/email.service.ts        # welcome email depends on profiles
-src/emails/                          # the welcome-email template
 src/app/api/profile/
 src/hooks/use-profile.ts
 ```
 
+Also delete `src/emails/welcome-email.tsx` (not the whole `src/emails/`
+directory — `confirm-signup-email.tsx`/`reset-password-email.tsx` don't
+depend on `profiles`) and the `sendWelcome` method from
+`src/services/email.service.ts` (not the whole file — `sendConfirmSignup`/
+`sendResetPassword` stay, since removing `profiles` doesn't remove
+Supabase Auth).
+
 Then:
 
-- Edit `src/app/api/auth/callback/route.ts` to drop `sendWelcomeOnce` and its two service imports; remove `RESEND_API_KEY`/`RESEND_FROM_EMAIL` from `.env.example`/`src/lib/env.ts` if you don't send app email.
+- Edit `src/app/api/auth/callback/route.ts` to drop `sendWelcomeOnce` and its two service imports.
 - Remove the `/api/profile` path entry and `profileResponseSchema` from `src/lib/api/openapi.ts` — otherwise the generated spec references a deleted endpoint.
 - Only delete migrations never applied to a live database; otherwise drop the objects first (`DROP TABLE profiles; DROP FUNCTION public.handle_new_user CASCADE;`) or reset the database.
 - To bring a companion table back later, reuse the pattern in `0001_auth-trigger-and-rls.sql`: FK to `auth.users(id) ON DELETE CASCADE`, RLS enabled, `AFTER INSERT ON auth.users` trigger.
