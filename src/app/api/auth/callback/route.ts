@@ -33,7 +33,13 @@ export async function GET(request: Request) {
 async function sendWelcomeOnce(userId: string, email: string | undefined, origin: string) {
   if (!email) return;
 
-  const claim = await profileService.claimWelcomeEmail(userId);
+  let claim;
+  try {
+    claim = await profileService.claimWelcomeEmail(userId);
+  } catch (err) {
+    console.error("Welcome email claim failed:", err);
+    return;
+  }
   if (!claim) return;
 
   try {
