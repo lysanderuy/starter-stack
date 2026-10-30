@@ -151,13 +151,14 @@ src/
 │   ├── global-error.tsx  # Root-layout error fallback (self-contained)
 │   ├── not-found.tsx     # 404
 │   └── api/              # Route handlers only — no UI under api/
-│       ├── auth/         # callback (code exchange) + logout
+│       ├── auth/         # callback (code exchange), logout, email-hook (Supabase Send Email Hook)
 │       ├── docs/         # Scalar interactive API reference UI
 │       ├── openapi.json/ # generated OpenAPI 3.1 spec (raw JSON, no envelope)
 │       └── profile/      # example: GET/PATCH /api/profile
 ├── components/
 │   ├── ui/               # Generic primitives (buttons, inputs, ...)
 │   └── shared/           # Composed, app-specific components
+├── emails/               # React Email templates (confirm signup, reset password, welcome)
 ├── hooks/                # React hooks (use-*.ts), incl. TanStack Query hooks
 ├── stores/               # Zustand stores (*.store.ts) — client-only UI state
 ├── lib/
